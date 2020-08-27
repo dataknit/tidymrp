@@ -1,0 +1,26 @@
+Package: tidymrp
+Type: Package
+Title: Tidy multilevel regression and poststratification (MRP)
+Version: 0.0.0.9000
+Authors@R: person("Jobi", "Kroese", email = "jo@citizense.org",
+  role = c("aut", "cre"))
+Description: Run multilevel regression and poststratification analyses.
+    It provides functions useful for MRP workflows including creating poststratification frames,
+    poststratifying and visualising MRP results.
+License: AGPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.1
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
+Imports: 
+    magrittr,
+    dplyr,
+    tibble,
+    brms,
+    tidybayes
+Depends: 
+    R (>= 2.10)
+VignetteBuilder: knitr

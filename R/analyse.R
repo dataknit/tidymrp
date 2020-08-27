@@ -17,7 +17,7 @@ create_poststratification_frame <- function(census, strata_variables, weight_col
 }
 
 
-#' Create post-stratified draws from a model
+#' Create poststratified draws from a model
 #'
 #' @param model
 #' @param poststratification_frame
@@ -37,6 +37,19 @@ get_poststratified_draws <- function(model, new_data, weight_column = population
 }
 
 
+#' Title
+#'
+#' @param model
+#' @param new_data
+#' @param group_variables
+#' @param weight_column
+#' @param lower_confidence
+#' @param upper_confidence
+#'
+#' @return
+#' @export
+#'
+#' @examples
 get_strata_estimates <- function(model, new_data, group_variables, weight_column = population_total, lower_confidence = 0.025, upper_confidence = 1-lower_confidence) {
 
   model %>%
@@ -95,9 +108,21 @@ add_proportion <- function(poststratification_frame, model_variables, estimates_
     #           .groups = "drop")
 }
 
+#' Title
+#'
+#' @param model
+#' @param new_data
+#' @param model_variables
+#' @param estimates_by
+#' @param weight_column
+#' @param lower_confidence
+#' @param upper_confidence
+#'
+#' @return
+#' @export
+#'
+#' @examples
 get_poststratified_estimates <- function(model, new_data, model_variables, estimates_by, weight_column = population_total, lower_confidence = 0.025, upper_confidence = 1-lower_confidence) {
-
-  # add way to automatically get model variables from model
 
   poststratification_frame <- add_proportion(new_data, {{ model_variables }}, {{ estimates_by }})
 

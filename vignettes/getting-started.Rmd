@@ -2,7 +2,7 @@
 title: "Getting Started"
 output: rmarkdown::html_vignette
 vignette: >
-%\VignetteIndexEntry{getting_started}
+  %\VignetteIndexEntry{Getting Started}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -13,7 +13,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
-
 
 ```{r setup}
 library(tidyverse)
@@ -75,7 +74,8 @@ binary_model_1 <- brms::brm(binary_response ~ 1 + (1 | region) + (1 | age_group)
                             family = bernoulli(),
                             data = example_survey,
                             chains = parallel::detectCores(),
-                            iter = 200 # 200 is normally enough to get the idea
+                            iter = 200, # 200 is normally enough to get the idea
+                            file = here::here("models/binary_model_1")
                             )
 ```
 
@@ -84,18 +84,18 @@ binary_model_1 <- brms::brm(binary_response ~ 1 + (1 | region) + (1 | age_group)
 Now we have a model that predicts the response based on age and region. We also have a poststratification frame that tells us how many people are in each age and region strata. We can get the estimates for each section we are interested in now.
 
 
-```{r}
-strata_estimates <- get_strata_estimates(model = binary_model_1,
-                                         new_data = poststratification_frame,
-                                         group_variables = c(age_group, region), lower_confidence = 0.2)
-```
+<!-- ```{r} -->
+<!-- strata_estimates <- get_strata_estimates(model = binary_model_1, -->
+<!--                                          new_data = poststratification_frame, -->
+<!--                                          group_variables = c(age_group, region), lower_confidence = 0.2) -->
+<!-- ``` -->
 
-Often we are less interested in the results by strata, as we are in the results by region.
+<!-- Often we are less interested in the results by strata, as we are in the results by region. -->
 
-```{r}
-strata_estimates %>%
-  left_join(poststratification_frame, by = c("age_group", "region"))
-```
+<!-- ```{r} -->
+<!-- strata_estimates %>% -->
+<!--   left_join(poststratification_frame, by = c("age_group", "region")) -->
+<!-- ``` -->
 
 
 ```{r}

@@ -75,7 +75,7 @@ binary_model_1 <- brms::brm(binary_response ~ 1 + (1 | region) + (1 | age_group)
                             data = example_survey,
                             chains = parallel::detectCores(),
                             iter = 200, # 200 is normally enough to get the idea
-                            file = here::here("models/binary_model_1")
+                            file = "/models/binary_model_1"
                             )
 ```
 

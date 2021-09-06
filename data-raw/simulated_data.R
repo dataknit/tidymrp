@@ -1,28 +1,10 @@
-# example_census <- read.csv("https://github.com/RohanAlexander/mrp_workshop/blob/master/outputs/data/census_data.csv")
-
 region_options <- c("A", "B", "C", "D", "E")
 age_group_options <- c("16_to_24", "25_to_34", "35_to_44", "45_to_54", "55_to_64", "65_plus")
 age_options <- 16:80
 ethnicity_options <- 1:5
 gender_options <- c("male", "female", "other")
 
-
-census_size <- 1000000
-
-example_census <- tibble::tibble(
-  region = sample(region_options, size = census_size, replace = TRUE),
-  age_group = sample(age_group_options, size = census_size, replace = TRUE),
-  ethnicity = sample(ethnicity_options, size = census_size, replace = TRUE),
-  gender = sample(gender_options, size = census_size, replace = TRUE, prob = c(0.48, 0.48, 0.04))
-) %>%
-  dplyr::group_by(region, age_group, ethnicity, gender) %>%
-  dplyr::summarise(population_total = dplyr::n(),
-                  .groups = "drop")
-
-usethis::use_data(example_census, overwrite = TRUE)
-
-
-
+# Survey
 
 survey_size <- 17000
 
@@ -46,3 +28,19 @@ example_survey <- tibble::tibble(
 
 
 usethis::use_data(example_survey, overwrite = TRUE)
+
+# Census
+
+census_size <- 1000000
+
+example_census <- tibble::tibble(
+  region = sample(region_options, size = census_size, replace = TRUE, prob = c(0.4, 0.2, 0.2, 0.15, 0.05)),
+  age_group = sample(age_group_options, size = census_size, replace = TRUE),
+  ethnicity = sample(ethnicity_options, size = census_size, replace = TRUE),
+  gender = sample(gender_options, size = census_size, replace = TRUE, prob = c(0.48, 0.48, 0.04))
+) %>%
+  dplyr::group_by(region, age_group, ethnicity, gender) %>%
+  dplyr::summarise(n = dplyr::n(),
+                  .groups = "drop")
+
+usethis::use_data(example_census, overwrite = TRUE)

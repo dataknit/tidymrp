@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyse.R
 \name{get_poststratified_draws}
 \alias{get_poststratified_draws}
-\title{Create post-stratified draws from a model}
+\title{Create poststratified draws from a model}
 \usage{
 get_poststratified_draws(model, new_data, weight_column = population_total)
 }
@@ -13,5 +13,5 @@ get_poststratified_draws(model, new_data, weight_column = population_total)
 
 }
 \description{
-Create post-stratified draws from a model
+Create poststratified draws from a model
 }

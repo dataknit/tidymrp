@@ -13,7 +13,7 @@
 #' @export
 #'
 #' @examples
-poststratify <- function(model, poststratification_frame, estimates_by, weight_column = "n", lower_confidence = 0.025, upper_confidence = 1-lower_confidence, allow_new_levels = FALSE,
+poststratify <- function(model, poststratification_frame, estimates_by, weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence, allow_new_levels = FALSE,
                          draws = "predicted") {
 
   model_dependent_variables <- names(model$data) %>%

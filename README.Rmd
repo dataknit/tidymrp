@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 # tidymrp
 
 <!-- badges: start -->
-  [![R-CMD-check](https://github.com/joekroese/tidymrp/workflows/R-CMD-check/badge.svg)](https://github.com/joekroese/tidymrp/actions)
+`r badger::badge_github_actions("CefasRepRes/seaangling", action = "check-release")`
 <!-- badges: end -->
 
 tidymrp makes it easy to run multilevel regression and poststratification (MRP) analyses in R. It fits neatly into the tidyverse and can be used with a range of modelling packages from frequentist to Bayesian.

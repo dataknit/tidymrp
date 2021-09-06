@@ -5,7 +5,8 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/joekroese/tidymrp/workflows/R-CMD-check/badge.svg)](https://github.com/joekroese/tidymrp/actions)
+[![R build
+status](https://github.com/CefasRepRes/seaangling/workflows/check-release/badge.svg)](https://github.com/CefasRepRes/seaangling/actions)
 <!-- badges: end -->
 
 tidymrp makes it easy to run multilevel regression and

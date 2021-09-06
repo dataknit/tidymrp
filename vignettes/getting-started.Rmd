@@ -14,123 +14,125 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(tidyverse)
-library(tidymrp)
-```
+<!-- ```{r setup} -->
+<!-- library(tidyverse) -->
+<!-- library(tidymrp) -->
+<!-- ``` -->
 
-MRP needs two datasets:
-1. A survey
-1. A poststratification frame
+<!-- MRP needs two datasets: -->
+<!-- 1. A survey -->
+<!-- 1. A poststratification frame -->
 
-## Poststratification Frame
+<!-- ## Poststratification Frame -->
 
-A poststratification frame splits the population we are interested in into discrete groups. Formally this is called a _partition_: each person in the population belongs to exactly one group. These groups are called _stratas_. Hence _poststratification_: a splitting of the population into _stratas_ and _post_ because it is done after the sample is collected. (This is opposed to stratified sampling, a type of probabilistic sampling.)
+<!-- A poststratification frame splits the population we are interested in into discrete groups. Formally this is called a _partition_: each person in the population belongs to exactly one group. These groups are called _stratas_. Hence _poststratification_: a splitting of the population into _stratas_ and _post_ because it is done after the sample is collected. (This is opposed to stratified sampling, a type of probabilistic sampling.) -->
 
-There are a few ways to get a poststratification frame. We can either get a pre-prepared one or make one. To make one we need a census. (For more details, see the vignette [creating a poststratification frame](creating_a_poststratification_frame)).
+<!-- There are a few ways to get a poststratification frame. We can either get a pre-prepared one or make one. To make one we need a census. (For more details, see the vignette [creating a poststratification frame](creating_a_poststratification_frame)). -->
 
-```{r}
-poststratification_frame <- example_census %>%
-  create_poststratification_frame(strata_variables = c(region, age_group),
-                                  weight_column = population_total)
-```
+<!-- ```{r} -->
+<!-- poststratification_frame <- example_census %>% -->
+<!--   create_poststratification_frame(strata_variables = c(region, age_group), -->
+<!--                                   weight_column = population_total) -->
+<!-- ``` -->
 
-So now we know how many people are in each strata. But what do those people do?
+<!-- So now we know how many people are in each strata. But what do those people do? -->
 
-## Creating a model of responses
+<!-- ## Creating a model of responses -->
 
-We want to build a model that can predict the response of any person. This is where the survey comes in useful. We can create a model to predict their response based on the socio-demographic information included in the poststratification frame. (This is often a limiting factor, though there are ways around it. To explore alternatives, look at the vignette on [advanced poststratification](advanced_poststratification).) We chose a poststratification frame that includes region and age, so our model should be based on that.
+<!-- We want to build a model that can predict the response of any person. This is where the survey comes in useful. We can create a model to predict their response based on the socio-demographic information included in the poststratification frame. (This is often a limiting factor, though there are ways around it. To explore alternatives, look at the vignette on [advanced poststratification](advanced_poststratification).) We chose a poststratification frame that includes region and age, so our model should be based on that. -->
 
-Model fitting is not a copy and paste job. For an overview, see [multilevel_regression_guide] and for a more in-depth discussion, read [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) or [Bayesian Data Analysis](http://www.stat.columbia.edu/~gelman/book/).
+<!-- Model fitting is not a copy and paste job. For an overview, see [multilevel_regression_guide] and for a more in-depth discussion, read [Statistical Rethinking](https://xcelab.net/rm/statistical-rethinking/) or [Bayesian Data Analysis](http://www.stat.columbia.edu/~gelman/book/). -->
 
-Let's look at our survey.
+<!-- Let's look at our survey. -->
 
-```{r}
-example_survey
-```
+<!-- ```{r} -->
+<!-- example_survey -->
+<!-- ``` -->
 
-Note first that the survey and poststratification classifications do not neatly overlap. In the census, we have 'age_group' and in the survey we have a finer variable of 'age'. We need to make the survey look like the census.
+<!-- Note first that the survey and poststratification classifications do not neatly overlap. In the census, we have 'age_group' and in the survey we have a finer variable of 'age'. We need to make the survey look like the census. -->
 
-```{r}
-example_survey <- example_survey %>%
-  mutate(age_group = case_when(
-    age %in% 16:24 ~ "16_to_24",
-    age %in% 25:34 ~ "25_to_34",
-    age %in% 35:44 ~ "35_to_44",
-    age %in% 45:54 ~ "45_to_54",
-    age %in% 55:64 ~ "55_to_64",
-    age >= 65 ~ "65_plus")
-  )
-```
+<!-- ```{r} -->
+<!-- example_survey <- example_survey %>% -->
+<!--   mutate(age_group = case_when( -->
+<!--     age %in% 16:24 ~ "16_to_24", -->
+<!--     age %in% 25:34 ~ "25_to_34", -->
+<!--     age %in% 35:44 ~ "35_to_44", -->
+<!--     age %in% 45:54 ~ "45_to_54", -->
+<!--     age %in% 55:64 ~ "55_to_64", -->
+<!--     age >= 65 ~ "65_plus") -->
+<!--   ) -->
+<!-- ``` -->
 
-There are two responses we can model. We will model the binary response because it is simpler. The binary response is either 0 or 1. If we assume that each strata has a probability of answering 0 or 1, the best likelihood we can use is a binomial distribution. (Technically, it is the maximum entropy distribution i.e. it doesn't know any more than we do.)
+<!-- There are two responses we can model. We will model the binary response because it is simpler. The binary response is either 0 or 1. If we assume that each strata has a probability of answering 0 or 1, the best likelihood we can use is a binomial distribution. (Technically, it is the maximum entropy distribution i.e. it doesn't claim to know any more than we do.) -->
 
-tidymrp can be used with various model packages. Let's use [brms](https://paul-buerkner.github.io/brms/).
+<!-- tidymrp can be used with various model packages. Let's use [brms](https://paul-buerkner.github.io/brms/). -->
 
-```{r}
-library(brms)
-options(mc.cores = parallel::detectCores())
-binary_model_1 <- brms::brm(binary_response ~ 1 + (1 | region) + (1 | age_group),
-                            family = bernoulli(),
-                            data = example_survey,
-                            chains = parallel::detectCores(),
-                            iter = 200, # 200 is normally enough to get the idea
-                            file = "/models/binary_model_1"
-                            )
-```
+<!-- ```{r} -->
+<!-- library(brms) -->
+<!-- options(mc.cores = parallel::detectCores()) -->
+<!-- binary_model_1 <- brms::brm(binary_response ~ 1 + (1 | region) + (1 | age_group), -->
+<!--                             family = bernoulli(), -->
+<!--                             data = example_survey, -->
+<!--                             chains = parallel::detectCores(), -->
+<!--                             iter = 200, # 200 is normally enough to get the idea -->
+<!--                             file = "models/binary_model_1" -->
+<!--                             ) -->
+<!-- ``` -->
 
-## Combining the model and poststratification
+<!-- ## Combining the model and poststratification -->
 
-Now we have a model that predicts the response based on age and region. We also have a poststratification frame that tells us how many people are in each age and region strata. We can get the estimates for each section we are interested in now.
+<!-- Now we have a model that predicts the response based on age and region. We also have a poststratification frame that tells us how many people are in each age and region strata. We can get the estimates for each section we are interested in now. -->
+
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- strata_estimates <- get_strata_estimates(model = binary_model_1, --> -->
+<!-- <!--                                          new_data = poststratification_frame, --> -->
+<!-- <!--                                          group_variables = c(age_group, region), lower_confidence = 0.2) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Often we are less interested in the results by strata, as we are in the results by region. --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- strata_estimates %>% --> -->
+<!-- <!--   left_join(poststratification_frame, by = c("age_group", "region")) --> -->
+<!-- <!-- ``` --> -->
 
 
 <!-- ```{r} -->
-<!-- strata_estimates <- get_strata_estimates(model = binary_model_1, -->
-<!--                                          new_data = poststratification_frame, -->
-<!--                                          group_variables = c(age_group, region), lower_confidence = 0.2) -->
+<!-- add_proportion(poststratification_frame, -->
+<!--                model_variables = c(age_group, region), -->
+<!--                estimates_by = region, -->
+<!--                weight_column = population_total) -->
 <!-- ``` -->
-
-<!-- Often we are less interested in the results by strata, as we are in the results by region. -->
 
 <!-- ```{r} -->
-<!-- strata_estimates %>% -->
-<!--   left_join(poststratification_frame, by = c("age_group", "region")) -->
+<!-- poststratified_estimates <- get_poststratified_estimates(model = binary_model_1, -->
+<!--                              new_data = poststratification_frame, -->
+<!--                              model_variables = c(age_group, region), -->
+<!--                              estimates_by = region) -->
+
+<!-- poststratified_estimates -->
 <!-- ``` -->
 
 
-```{r}
-add_proportion(poststratification_frame,
-               model_variables = c(age_group, region),
-               estimates_by = region)
-```
 
-```{r}
-poststratified_estimates <- get_poststratified_estimates(model = binary_model_1,
-                             new_data = poststratification_frame,
-                             model_variables = c(age_group, region),
-                             estimates_by = region)
+<!-- ## Visualise results -->
 
-poststratified_estimates
-```
-
-
-
-## Visualise results
-
-```{r}
-poststratified_estimates %>% 
-  ggplot(aes(y = mean_estimate,
-             x = forcats::fct_inorder(region),
-             color = "MRP estimate")) + 
-  geom_point() +
-  geom_errorbar(aes(ymin = lower_estimate, ymax = upper_estimate), width = 0) +
-  geom_point(data = example_survey %>% 
-               group_by(region, binary_response) %>%
-               summarise(n = n()) %>% 
-               group_by(region) %>% 
-               mutate(prop = n/sum(n)) %>% 
-               filter(binary_response==1), 
-             aes(region, prop, color = "Raw data")) +
-  ggplot2::labs(x = "Region", y = "Estimate")
-```
+<!-- ```{r} -->
+<!-- poststratified_estimates %>%  -->
+<!--   ggplot(aes(y = mean_estimate, -->
+<!--              x = forcats::fct_inorder(region), -->
+<!--              color = "MRP estimate")) +  -->
+<!--   geom_point() + -->
+<!--   geom_errorbar(aes(ymin = lower_estimate, ymax = upper_estimate), width = 0) + -->
+<!--   geom_point(data = example_survey %>%  -->
+<!--                group_by(region, binary_response) %>% -->
+<!--                summarise(n = n()) %>%  -->
+<!--                group_by(region) %>%  -->
+<!--                mutate(prop = n/sum(n)) %>%  -->
+<!--                filter(binary_response==1),  -->
+<!--              aes(region, prop, color = "Raw data")) + -->
+<!--   ggplot2::labs(x = "Region", y = "Estimate") + -->
+<!--   ylim(0, 1) -->
+<!-- ``` -->
 

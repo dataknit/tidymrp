@@ -2,7 +2,7 @@ Package: tidymrp
 Type: Package
 Title: Tidy multilevel regression and poststratification (MRP)
 Version: 0.0.0.9000
-Authors@R: person("Jobi", "Kroese", email = "jo@citizense.org",
+Authors@R: person("Jo", "Kroese", email = "jo@jokroese.com",
   role = c("aut", "cre"))
 Description: Run multilevel regression and poststratification analyses.
     It provides functions useful for MRP workflows including creating poststratification frames,

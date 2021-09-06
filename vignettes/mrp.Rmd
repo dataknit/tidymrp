@@ -1,0 +1,84 @@
+---
+title: "MRP"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{MRP}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(tidyverse)
+library(tidymrp)
+library(magrittr)
+library(brms)
+```
+
+```{r}
+options(mc.cores = parallel::detectCores())
+```
+
+## Get data
+
+```{r}
+data(example_survey)
+data(example_census)
+```
+
+## Build model
+
+We believe that age is influences the value of non_negative_response. This is a continuous variable. The easiest way to intgrate it is by discretising it.
+
+```{r}
+example_survey <- example_survey %>%
+  mutate(age_group = case_when(
+    age %in% 16:24 ~ "16_to_24",
+    age %in% 25:34 ~ "25_to_34",
+    age %in% 35:44 ~ "35_to_44",
+    age %in% 45:54 ~ "45_to_54",
+    age %in% 55:64 ~ "55_to_64",
+    age >= 65 ~ "65_plus")
+  )
+```
+
+```{r}
+non_negative_response_model_1 <- example_survey %>%
+  head(1000) %>%
+  brms::brm(
+    bf(non_negative_response ~ 1 + (1 | age_group),
+       shape ~ 1 + (1 | age_group)),
+    family = Gamma(),
+    data = .,
+    chains = parallel::detectCores(),
+    iter = 200, # 200 is normally enough to get the idea
+    file = "models/non_negative_response_model_1"
+  )
+```
+
+## Prepare poststratification
+
+We need to know how many people are in each strata. To do that, we turn the census into a poststratification frame. This means grouping along the variables in the model to make stratas. We then summing the number of people in each strata.
+
+<!-- Turn the census into a poststratification frame by grouping along the categorical variables used in the model and summing all the people in those stratas. -->
+
+```{r}
+poststratification_frame <- example_census %>%
+  create_poststratification_frame(strata_variables = c(age_group, region),
+                                  weight_column = n)
+```
+
+## Get estimates
+
+```{r}
+poststratified_estimates <- poststratify(model = non_negative_response_model_1,
+                                         poststratification_frame = poststratification_frame,
+                                         estimates_by = region)
+poststratified_estimates
+```

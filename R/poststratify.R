@@ -21,7 +21,8 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
     str_remove(model$formula[[1]][[2]] %>%
                  as.character()
     ) %>%
-    .[. != ""]
+    .[. != ""] %>% # remove empty term in formula
+    .[!. %in% grep(c(":", "*"), ., value = T)] # remove interaction terms in formula
 
   # warning for estimates_by not being in the model
   # if(setdiff(as.vector({{ estimates_by }}), model_dependent_variables) %>% length() >= 1) {

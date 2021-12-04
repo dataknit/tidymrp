@@ -18,7 +18,7 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
                          draws = "predicted", ...) {
 
   model_dependent_variables <- names(model$data) %>%
-    str_remove(model$formula[[1]][[2]] %>%
+    stringr::str_remove(model$formula[[1]][[2]] %>%
                  as.character()
     ) %>%
     .[. != ""] %>% # remove empty term in formula

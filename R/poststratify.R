@@ -7,14 +7,15 @@
 #' @param upper_confidence
 #' @param poststratification_frame
 #' @param allow_new_levels
-#' @param draws predicted (default) or fitted. predicted incorporates all uncertainty.
+#' @param draws predicted (default) or fitted. Predicted incorporates all uncertainty.
+#' @param ... Extra arguments for adding draws from tidybayes. See tidybayes::add_predicted_draws() for details.
 #'
 #' @return
 #' @export
 #'
 #' @examples
-poststratify <- function(model, poststratification_frame, estimates_by, weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence, allow_new_levels = FALSE,
-                         draws = "predicted") {
+poststratify <- function(model, poststratification_frame, estimates_by, weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence,
+                         draws = "predicted", ...) {
 
   model_dependent_variables <- names(model$data) %>%
     str_remove(model$formula[[1]][[2]] %>%
@@ -34,13 +35,15 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
                      .groups = "drop")
 
   if(draws == "predicted") {
-    draws <- model %>%
-      tidybayes::add_predicted_draws(newdata = reduced_frame,
-                                     value = "strata_prediction")
+    draws <- tidybayes::add_predicted_draws(newdata = reduced_frame,
+                                            object = model,
+                                            value = "strata_prediction",
+                                            ...)
   } else if(draws == "fitted") {
-    draws <- model %>%
-      tidybayes::add_fitted_draws(newdata = reduced_frame,
-                                  value = "strata_prediction")
+    draws <- tidybayes::add_epred_draws(newdata = reduced_frame,
+                                        object = model,
+                                        value = "strata_prediction",
+                                        ...)
   } else {
     stop("'draws' parameter is invalid. It must be 'predicted' or 'fitted'.")
   }

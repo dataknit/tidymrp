@@ -146,7 +146,7 @@ add_proportion <- function(poststratification_frame, model_variables, estimates_
     dplyr::group_by(dplyr::across({{ estimates_by }}), dplyr::across({{ model_variables }}), population_total_sum) %>%
     dplyr::summarise(population_total = sum({{ weight_column }}), .groups = "drop") %>%
     dplyr::mutate(strata_proportion = population_total/population_total_sum) %>%
-    select(-population_total_sum)
+    dplyr::select(-population_total_sum)
   # dplyr::mutate(population_proportion = population_total/population_total_sum) %>%
   # population
   # dplyr::group_by()

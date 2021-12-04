@@ -22,7 +22,7 @@ library(brms)
 ```
 
 ```{r}
-options(mc.cores = parallel::detectCores())
+# options(mc.cores = parallel::detectCores())
 ```
 
 ## Get data
@@ -34,7 +34,7 @@ data(example_census)
 
 ## Build model
 
-We believe that age is influences the value of non_negative_response. This is a continuous variable. The easiest way to intgrate it is by discretising it.
+We believe that age influences the value of non_negative_response. This is a continuous variable. The easiest way to integrate it is by discretising it.
 
 ```{r}
 example_survey <- example_survey %>%

@@ -8,15 +8,17 @@ poststratify(
   model,
   poststratification_frame,
   estimates_by,
-  weight_column = "n",
+  weight_column = n,
   lower_confidence = 0.025,
   upper_confidence = 1 - lower_confidence,
-  allow_new_levels = FALSE,
-  draws = "predicted"
+  draws = "predicted",
+  ...
 )
 }
 \arguments{
-\item{draws}{predicted (default) or fitted. predicted incorporates all uncertainty.}
+\item{draws}{predicted (default) or fitted. Predicted incorporates all uncertainty.}
+
+\item{...}{Extra arguments for adding draws from tidybayes. See tidybayes::add_predicted_draws() for details.}
 }
 \value{
 

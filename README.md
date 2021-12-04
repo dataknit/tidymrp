@@ -4,14 +4,12 @@
 # tidymrp
 
 <!-- badges: start -->
-
-[![R-CMD-check](https://github.com/joekroese/tidymrp/workflows/R-CMD-check/badge.svg)](https://github.com/joekroese/tidymrp/actions)
+<!-- [![R-CMD-check](https://github.com/joekroese/tidymrp/workflows/R-CMD-check/badge.svg)](https://github.com/joekroese/tidymrp/actions) -->
 <!-- badges: end -->
 
 tidymrp makes it easy to run multilevel regression and
 poststratification (MRP) analyses in R. It fits neatly into the
-tidyverse and can be used with a range of modelling packages from
-frequentist to Bayesian.
+tidyverse and can be used with a range of modelling packages.
 
 The focus of the package is on providing functions useful for MRP
 workflows including creating poststratification frames, poststratifying

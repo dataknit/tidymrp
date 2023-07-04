@@ -14,7 +14,7 @@ URL: htts://tidymrp.jokroese.com
 BugReports: https://github.com/jokroese/tidymrp/issues
 RoxygenNote: 7.2.3
 Suggests: 
-    testthat,
+    testthat (>= 3.0.0),
     knitr,
     rmarkdown,
     tidyverse
@@ -27,3 +27,4 @@ Imports:
 Depends: 
     R (>= 4.1)
 VignetteBuilder: knitr
+Config/testthat/edition: 3

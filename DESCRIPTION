@@ -10,7 +10,9 @@ Description: Run multilevel regression and poststratification analyses.
 License: AGPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+URL: htts://tidymrp.jokroese.com
+BugReports: https://github.com/jokroese/tidymrp/issues
+RoxygenNote: 7.2.3
 Suggests: 
     testthat,
     knitr,

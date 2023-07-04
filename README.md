@@ -4,26 +4,25 @@
 # tidymrp
 
 <!-- badges: start -->
-<!-- [![R-CMD-check](https://github.com/joekroese/tidymrp/workflows/R-CMD-check/badge.svg)](https://github.com/joekroese/tidymrp/actions) -->
 <!-- badges: end -->
 
-tidymrp makes it easy to run multilevel regression and
-poststratification (MRP) analyses in R. It fits neatly into the
-tidyverse and can be used with a range of modelling packages.
+The goal of tidymrp is to …
 
-The focus of the package is on providing functions useful for MRP
-workflows including creating poststratification frames, poststratifying
-and visualising MRP results.
+## Installation
 
-## Getting Started
-
-### Installation
-
-Install the latest development version from GitHub:
+You can install the development version of tidymrp from
+[GitHub](https://github.com/) with:
 
 ``` r
-if (!require("devtools")) {
-  install.packages("devtools")
-}
-devtools::install_github("joekroese/tidymrp")
+# install.packages("devtools")
+devtools::install_github("jokroese/tidymrp")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+``` r
+library(tidymrp)
+## basic example code
 ```

@@ -17,21 +17,11 @@
 poststratify <- function(model, poststratification_frame, estimates_by, weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence,
                          draws = "predicted", ...) {
 
-  model_dependent_variables <- names(model$data) %>%
-    stringr::str_remove(model$formula[[1]][[2]] %>%
-                 as.character()
-    ) %>%
-    .[. != ""] %>% # remove empty term in formula
-    .[!. %in% grep(c(":", "*"), ., value = T)] # remove interaction terms in formula
-
-  # warning for estimates_by not being in the model
-  # if(setdiff(as.vector({{ estimates_by }}), model_dependent_variables) %>% length() >= 1) {
-  #   stop("estimates_by is not a dependent variable of in the model")
-  # }
+  model_independent_variables <- get_independent_variables(model)
 
   # aggregate away any unused variables in poststratification frame
   reduced_frame <- poststratification_frame %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(model_dependent_variables)), dplyr::across({{ estimates_by }})) %>%
+    dplyr::group_by(dplyr::across(dplyr::all_of(model_independent_variables)), dplyr::across({{ estimates_by }})) %>%
     dplyr::summarise(n = sum({{ weight_column }}),
                      .groups = "drop")
 

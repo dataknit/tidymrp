@@ -12,6 +12,8 @@ poststratify(
   lower_confidence = 0.025,
   upper_confidence = 1 - lower_confidence,
   draws = "predicted",
+  large_frame = FALSE,
+  progress = FALSE,
   ...
 )
 }

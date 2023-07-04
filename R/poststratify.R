@@ -6,8 +6,8 @@
 #' @param lower_confidence
 #' @param upper_confidence
 #' @param poststratification_frame
-#' @param allow_new_levels
 #' @param draws predicted (default) or fitted. Predicted incorporates all uncertainty.
+#' @param large_frame
 #' @param ... Extra arguments for adding draws from tidybayes. See tidybayes::add_predicted_draws() for details.
 #'
 #' @return
@@ -15,16 +15,57 @@
 #'
 #' @examples
 poststratify <- function(model, poststratification_frame, estimates_by, weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence,
-                         draws = "predicted", ...) {
+                         draws = "predicted", large_frame = FALSE, progress = FALSE, ...) {
 
-  model_independent_variables <- get_independent_variables(model)
+  # prepare
+  model_independent_variables <- get_independent_variables({{ model }})
 
   # aggregate away any unused variables in poststratification frame
-  reduced_frame <- poststratification_frame %>%
+  reduced_frame <- {{ poststratification_frame }} %>%
     dplyr::group_by(dplyr::across(dplyr::all_of(model_independent_variables)), dplyr::across({{ estimates_by }})) %>%
     dplyr::summarise(n = sum({{ weight_column }}),
                      .groups = "drop")
 
+  # do poststratification
+  if (!large_frame) {
+    poststratified_estimates <- perform_poststratification({{ model }}, reduced_frame, {{ estimates_by }},
+                                                           {{ lower_confidence }}, {{ upper_confidence }},
+                                                           {{ draws }}, ...)
+  }
+  else {
+    poststratified_estimates <- tibble()
+    values <- reduced_frame |>
+      distinct(across({{ estimates_by }}))
+    for(i in 1:nrow(values)) {
+      if(progress) { message(paste0(round(100*i/nrow(values), 2), "%")) }
+      current_values <- values[i,]
+      print(paste("Poststratifying for", paste(current_values, collapse = " and ")))
+      current_frame <- current_values |>
+        left_join(reduced_frame, by = join_by({{ estimates_by }}))
+      poststratified_estimates <- bind_rows(poststratified_estimates,
+                                            perform_poststratification({{ model }}, current_frame, {{ estimates_by }},
+                                                                       {{ lower_confidence }}, {{ upper_confidence }},
+                                                                       {{ draws }}, ...))
+    }
+  }
+
+  # clean up
+  poststratified_estimates %>%
+    dplyr::relocate(n, .after = tidyselect::last_col())
+}
+
+
+#' Perform poststratification
+#'
+#' @param estimate_value
+#'
+#' @return
+#' @export
+#'
+#' @examples
+perform_poststratification <- function(model, reduced_frame, estimates_by,
+                                       lower_confidence, upper_confidence,
+                                       draws, ...) {
   if(draws == "predicted") {
     draws <- tidybayes::add_predicted_draws(newdata = reduced_frame,
                                             object = model,
@@ -49,19 +90,19 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
     dplyr::summarise(
       # x = quantile(pop_prediction, c(0.25, 0.5, 0.75)), q = c(0.25, 0.5, 0.75),
       estimate_sum = mean(division_prediction, na.rm = TRUE),
-      estimate_sum_lower = stats::quantile(division_prediction, 0.025, na.rm = TRUE),
-      estimate_sum_upper = stats::quantile(division_prediction, 0.975, na.rm = TRUE),
+      estimate_sum_lower = stats::quantile(division_prediction, lower_confidence, na.rm = TRUE),
+      estimate_sum_upper = stats::quantile(division_prediction, upper_confidence, na.rm = TRUE),
       .groups = "drop") %>%
     dplyr::left_join(reduced_frame %>%
                        dplyr::group_by(dplyr::across({{ estimates_by }})) %>%
                        dplyr::summarise(n = sum(n),
-                                        .groups = "drop")) %>%
+                                        .groups = "drop"),
+                     by = join_by({{ estimates_by }})) %>%
     dplyr::mutate(estimate_mean = estimate_sum/n,
                   estimate_mean_lower = estimate_sum_lower/n,
                   estimate_mean_upper = estimate_sum_upper/n)
 
-  poststratified_estimates %>%
-    dplyr::relocate(n, .after = tidyselect::last_col())
+  return(poststratified_estimates)
 }
 
 #' Collect draws by strata
@@ -132,7 +173,7 @@ add_proportion <- function(poststratification_frame, model_variables, estimates_
                      .groups = "drop")
 
   poststratification_frame %>%
-    dplyr::left_join(results_by_totals) %>%
+    dplyr::left_join(results_by_totals, by = join_by({{ estimates_by }})) %>%
     dplyr::group_by(dplyr::across({{ estimates_by }}), dplyr::across({{ model_variables }}), population_total_sum) %>%
     dplyr::summarise(population_total = sum({{ weight_column }}), .groups = "drop") %>%
     dplyr::mutate(strata_proportion = population_total/population_total_sum) %>%

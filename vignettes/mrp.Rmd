@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(tidyverse)
-library(tidymrp)
+# library(tidymrp)
 library(magrittr)
 library(brms)
 ```
@@ -79,6 +79,6 @@ poststratification_frame <- example_census %>%
 ```{r}
 poststratified_estimates <- poststratify(model = non_negative_response_model_1,
                                          poststratification_frame = poststratification_frame,
-                                         estimates_by = region)
+                                         estimates_by = region, large_frame = TRUE, progress = TRUE)
 poststratified_estimates
 ```

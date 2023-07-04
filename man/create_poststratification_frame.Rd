@@ -9,9 +9,6 @@ create_poststratification_frame(census, strata_variables, weight_column = 1)
 \arguments{
 \item{weight_column}{}
 }
-\value{
-
-}
 \description{
 Create poststratification frame from a population level survey such as a census
 }

@@ -20,9 +20,6 @@ poststratify(
 
 \item{...}{Extra arguments for adding draws from tidybayes. See tidybayes::add_predicted_draws() for details.}
 }
-\value{
-
-}
 \description{
 Get poststratified estimates from a model
 }

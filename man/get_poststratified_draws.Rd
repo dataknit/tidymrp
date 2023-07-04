@@ -9,9 +9,6 @@ get_poststratified_draws(model, new_data, weight_column = population_total)
 \arguments{
 \item{poststratification_frame}{}
 }
-\value{
-
-}
 \description{
 Create poststratified draws from a model
 }

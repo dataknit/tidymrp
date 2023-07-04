@@ -15,9 +15,6 @@ calculate_raised_totals(
 \arguments{
 \item{dependent_variable}{}
 }
-\value{
-
-}
 \description{
 Calculate raised totals
 }

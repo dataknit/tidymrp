@@ -14,9 +14,6 @@ calculate_survey_strata_weights(
 \arguments{
 \item{population_dataset}{}
 }
-\value{
-
-}
 \description{
 Calculate survey strata weights
 }

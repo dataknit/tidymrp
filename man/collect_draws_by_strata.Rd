@@ -9,9 +9,6 @@ collect_draws_by_strata(draws, strata_prediction, estimates_by)
 \arguments{
 \item{estimates_by}{}
 }
-\value{
-
-}
 \description{
 Usually used internally by poststratify. Provides draws, grouped by
 }

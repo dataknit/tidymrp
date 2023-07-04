@@ -14,9 +14,6 @@ add_proportion(
 \arguments{
 \item{weight_column}{}
 }
-\value{
-
-}
 \description{
 Adds a population_proportion column to a poststratification frame.
 }

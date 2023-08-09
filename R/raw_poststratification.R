@@ -59,56 +59,6 @@ calculate_raised_totals <- function(survey, survey_strata_weights, strata, resul
     summarise("{{dependent_variable}}_raised" := sum(dependent_variable_raised, na.rm = TRUE))
 }
 
-calculate_survey_errors <- function(survey, strata, average_catch_totals, results_by, assume_further_grouping_independent) {
-  # by_ = c(set_names(quo_name(strata)), set_names(quo_name(results_by)))
-
-  average_catch_variance <-
-    survey %>%
-    group_by(diarist_id, !!strata, !!!results_by) %>%
-    summarise(diarist_kept_weight = sum(kept_session_weight_g*(10^(-6))),
-              diarists_in_group = unique(diarists_in_group),
-              diarists_in_group_with_species_catch = unique(diarists_in_group_with_species_catch)) %>%
-    # left_join(average_catch_totals, by = c("strata_15", "species")) %>%
-    # inner_join(average_catch_totals, by = by_, suffix = c("",".y")) %>%
-    inner_join(average_catch_totals, suffix = c("",".y")) %>%
-    # add_group_numbers(!!!results_by, !!strata) %>%
-    group_by(!!strata, !!!results_by) %>%
-    summarise(kept_weight_var_1 = sum(diarist_kept_weight-kept_weight_diarist_average)^2,
-              number_unaccounted_diarists = unique(diarists_in_group)-unique(diarists_in_group_with_species_catch),
-              kept_weight_var_2 = number_unaccounted_diarists * (unique(kept_weight_diarist_average)^2),
-              kept_weight_var = (kept_weight_var_1 + kept_weight_var_2)/unique(diarists_in_group),
-              diarists_in_group = unique(diarists_in_group),
-              diarists_in_group_with_species_catch = unique(diarists_in_group_with_species_catch)
-    ) %>%
-    select(!!strata, !!!results_by, ends_with("var"), starts_with("diarists_in_"))
-
-    average_catch_variance %>%
-      mutate_if(is.numeric , replace_na, replace = 0) %>%
-      mutate(kept_weight_sd = sqrt(kept_weight_var)) %>%
-      join_by_quosure(data_right = diarists_strata_weights, var_to_impute = diarists_in_strata, left_index = !!strata, right_index = strata) %>%
-      group_by(!!strata, !!!results_by) %>%
-      mutate(kept_weight_se = kept_weight_sd/sqrt(diarists_in_strata)) %>%
-      select(!!strata, !!!results_by, sort(tidyselect::peek_vars()), diarists_in_strata)
-}
-
-calculate_errors <- function(strata_errors, strata, results_by) {
-  strata_errors %>%
-    mutate(
-      kept_weight_var = strata_variance * (kept_weight_diarist_average ^ 2) +
-        + (strata_total^2) * kept_weight_var,
-      kept_weight_var_2 = (strata_se^2) * (kept_weight_diarist_average ^ 2) +
-        (strata_total^2) * (kept_weight_se ^ 2)
-    ) %>%
-    group_by(!!!results_by) %>%
-    select(!!strata,
-           kept_weight_var, kept_weight_var_2) %>%
-    summarise_if(is.numeric, funs(sum(., na.rm = TRUE))) %>%
-    mutate(
-      kept_weight_sd = sqrt(kept_weight_var),
-      kept_weight_se = sqrt(kept_weight_var_2)
-    )
-}
-
 calculate_population_errors <- function(population_dataset, strata, bootstrap_times, population_dataset_effective_sample_size) {
   # calculate population values: mean, se, sd, variance
 

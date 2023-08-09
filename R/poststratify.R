@@ -21,8 +21,8 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
   model_independent_variables <- get_independent_variables({{ model }})
 
   # aggregate away any unused variables in poststratification frame
-  reduced_frame <- {{ poststratification_frame }} %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(model_independent_variables)), dplyr::across({{ estimates_by }})) %>%
+  reduced_frame <- {{ poststratification_frame }} |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(model_independent_variables)), dplyr::across({{ estimates_by }})) |>
     dplyr::summarise(n = sum({{ weight_column }}),
                      .groups = "drop")
 
@@ -50,7 +50,7 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
   }
 
   # clean up
-  poststratified_estimates %>%
+  poststratified_estimates |>
     dplyr::relocate(n, .after = tidyselect::last_col())
 }
 
@@ -85,19 +85,19 @@ perform_poststratification <- function(model, reduced_frame, estimates_by,
   }
 
   poststratified_estimates <- draws |>
-    collect_draws_by_strata(strata_prediction, {{ estimates_by }}) %>%
-    dplyr::group_by(dplyr::across({{ estimates_by }})) %>%
+    collect_draws_by_strata(strata_prediction, {{ estimates_by }}) |>
+    dplyr::group_by(dplyr::across({{ estimates_by }})) |>
     dplyr::summarise(
       # x = quantile(pop_prediction, c(0.25, 0.5, 0.75)), q = c(0.25, 0.5, 0.75),
       estimate_sum = mean(division_prediction, na.rm = TRUE),
       estimate_sum_lower = stats::quantile(division_prediction, lower_confidence, na.rm = TRUE),
       estimate_sum_upper = stats::quantile(division_prediction, upper_confidence, na.rm = TRUE),
-      .groups = "drop") %>%
-    dplyr::left_join(reduced_frame %>%
-                       dplyr::group_by(dplyr::across({{ estimates_by }})) %>%
+      .groups = "drop") |>
+    dplyr::left_join(reduced_frame |>
+                       dplyr::group_by(dplyr::across({{ estimates_by }})) |>
                        dplyr::summarise(n = sum(n),
                                         .groups = "drop"),
-                     by = join_by({{ estimates_by }})) %>%
+                     by = join_by({{ estimates_by }})) |>
     dplyr::mutate(estimate_mean = estimate_sum/n,
                   estimate_mean_lower = estimate_sum_lower/n,
                   estimate_mean_upper = estimate_sum_upper/n)
@@ -118,9 +118,9 @@ perform_poststratification <- function(model, reduced_frame, estimates_by,
 #'
 #' @examples
 collect_draws_by_strata <- function(draws, strata_prediction, estimates_by) {
-  draws %>%
-    dplyr::mutate(strata_prediction = strata_prediction*n) %>%
-    dplyr::group_by(dplyr::across({{ estimates_by }}), .draw) %>%
+  draws |>
+    dplyr::mutate(strata_prediction = strata_prediction*n) |>
+    dplyr::group_by(dplyr::across({{ estimates_by }}), .draw) |>
     dplyr::summarise(division_prediction = sum(strata_prediction),
                      .groups = "drop")
 }
@@ -136,9 +136,9 @@ collect_draws_by_strata <- function(draws, strata_prediction, estimates_by) {
 #'
 #' @examples
 create_poststratification_frame <- function(census, strata_variables, weight_column = 1) {
-  census %>%
-    dplyr::mutate(weight = {{ weight_column }}) %>%
-    dplyr::group_by(dplyr::across({{ strata_variables }})) %>%
+  census |>
+    dplyr::mutate(weight = {{ weight_column }}) |>
+    dplyr::group_by(dplyr::across({{ strata_variables }})) |>
     dplyr::summarise(n = sum(weight),
                      .groups = "drop")
 }
@@ -157,28 +157,28 @@ create_poststratification_frame <- function(census, strata_variables, weight_col
 #' @examples
 add_proportion <- function(poststratification_frame, model_variables, estimates_by, weight_column) {
 
-  # variable_group <- poststratification_frame %>%
-  #   dplyr::select( {{ model_variables }} ) %>%
-  #   dplyr::select( -{{ estimates_by }} ) %>%
+  # variable_group <- poststratification_frame |>
+  #   dplyr::select( {{ model_variables }} ) |>
+  #   dplyr::select( -{{ estimates_by }} ) |>
   #   names()
 
-  # dataset %>%
-  #   ungroup() %>%
-  #   dplyr::group_by(dplyr::across({{ variable_group_3 }})) %>%
+  # dataset |>
+  #   ungroup() |>
+  #   dplyr::group_by(dplyr::across({{ variable_group_3 }})) |>
   #   dplyr::summarise(result = max(col_4))
 
-  results_by_totals <- poststratification_frame %>%
-    dplyr::group_by(dplyr::across({{ estimates_by }})) %>%
+  results_by_totals <- poststratification_frame |>
+    dplyr::group_by(dplyr::across({{ estimates_by }})) |>
     dplyr::summarise(population_total_sum = sum({{ weight_column }}),
                      .groups = "drop")
 
-  poststratification_frame %>%
-    dplyr::left_join(results_by_totals, by = join_by({{ estimates_by }})) %>%
-    dplyr::group_by(dplyr::across({{ estimates_by }}), dplyr::across({{ model_variables }}), population_total_sum) %>%
-    dplyr::summarise(population_total = sum({{ weight_column }}), .groups = "drop") %>%
-    dplyr::mutate(strata_proportion = population_total/population_total_sum) %>%
+  poststratification_frame |>
+    dplyr::left_join(results_by_totals, by = join_by({{ estimates_by }})) |>
+    dplyr::group_by(dplyr::across({{ estimates_by }}), dplyr::across({{ model_variables }}), population_total_sum) |>
+    dplyr::summarise(population_total = sum({{ weight_column }}), .groups = "drop") |>
+    dplyr::mutate(strata_proportion = population_total/population_total_sum) |>
     dplyr::select(-population_total_sum)
-  # dplyr::mutate(population_proportion = population_total/population_total_sum) %>%
+  # dplyr::mutate(population_proportion = population_total/population_total_sum) |>
   # population
   # dplyr::group_by()
   #           population_proportion = {{ weight_column }}/population_total_sum,

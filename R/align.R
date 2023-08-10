@@ -104,5 +104,5 @@ get_character_variable_values <- function(model, frame) {
 
 get_all_character_variables <- function(model) {
   model$data |>
-    dplyr::select(where(is.character))
+    dplyr::select(where(is.character | is.factor))
 }

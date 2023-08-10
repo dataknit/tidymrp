@@ -9,7 +9,7 @@
 #' @examples
 check_frame_model_alignment <- function(model, frame) {
   variable_names <- check_variable_names(model, frame)
-  variable_values <- check_grouping_variable_values(model, frame)
+  variable_values <- check_character_variable_values(model, frame)
   if (variable_names == FALSE | variable_values == FALSE) {
     return(FALSE)
   } else {
@@ -28,18 +28,19 @@ check_frame_model_alignment <- function(model, frame) {
 #' @examples
 check_variable_names <- function(model, frame) {
   model_independent_variables <- get_independent_variables(model)
-  missing_variables <- setdiff(model_independent_variables, names(frame))
+  frame_variables <- names(frame)
+  variables_missing_in_frame <- setdiff(model_independent_variables, frame_variables)
 
-  if (length(missing_variables) == 0) {
+  if (length(variables_missing_in_frame) == 0) {
     message("All variable names found in frame.")
     return(TRUE)
   } else {
-    message(paste("The following variable names are missing in frame:", missing_variables))
+    message(paste0("The following variable names are missing in frame: ", paste0(variables_missing_in_frame, collapse = ", "), "."))
     return(FALSE)
   }
 }
 
-#' Check grouping variable values
+#' Check character variable values
 #'
 #' @param model
 #' @param frame
@@ -48,29 +49,60 @@ check_variable_names <- function(model, frame) {
 #' @export
 #'
 #' @examples
-check_grouping_variable_values <- function(model, frame) {
-  random_effects <- model |>
-    brms::ranef() |>
-    names()
+check_character_variable_values <- function(model, frame) {
+  result <- get_character_variable_values(model, frame)
 
-  data <- model$data
-
-  invalid_values <- c()
-  # check if frame contains any values that are not present in data[[effect]]
-  for (effect in random_effects) {
-    effect_levels <- levels(data[[effect]])
-    frame_values <- frame[[effect]]
-    if (any(!frame_values %in% effect_levels)) {
-      invalid_values <- frame_values[!frame_values %in% effect_levels]
-      message(paste0('Invalid values found in variable ', effect, ': ', invalid_values |> unique()))
-    }
-  }
-
-  if(length(invalid_values) > 0) {
+  if(anyNA(result)) {
     return(FALSE)
-  }
-  else {
-    message("All grouping values found in frame.")
+  } else {
     return(TRUE)
   }
+
+}
+
+
+#' Get character variable values
+#'
+#' @param model
+#' @param frame
+#'
+#' @return
+#' @export
+#'
+#' @examples
+get_character_variable_values <- function(model, frame) {
+  character_variables_in_model <- get_all_character_variables(model)
+
+  character_variables_in_frame <- frame |>
+    dplyr::select(names(character_variables_in_model))
+
+  col_names <- colnames(character_variables_in_model)
+
+  result <- tibble::tibble(column_name = character(),
+                           value_in_model = character(),
+                           value_in_frame = character())
+
+  for (col_name in col_names) {
+    model_values <- character_variables_in_model[[col_name]] |>
+      unique()
+    frame_values <- character_variables_in_frame[[col_name]] |>
+      unique()
+    all_values <- append(model_values, frame_values) |>
+      unique()
+
+    for (value in all_values) {
+      result <- result |>
+        dplyr::add_row(column_name = col_name,
+                       value_in_model = dplyr::if_else(value %in% model_values, value, NA),
+                       value_in_frame = dplyr::if_else(value %in% frame_values, value, NA))
+    }
+
+  }
+
+  return(result)
+}
+
+get_all_character_variables <- function(model) {
+  model$data |>
+    dplyr::select(where(is.character))
 }

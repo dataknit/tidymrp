@@ -8,6 +8,8 @@
 #' @param poststratification_frame
 #' @param draws predicted (default) or fitted. Predicted incorporates all uncertainty.
 #' @param large_frame
+#' @param progress
+#' @param backend
 #' @param ... Extra arguments for adding draws from tidybayes. See tidybayes::add_predicted_draws() for details.
 #'
 #' @return
@@ -31,21 +33,20 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
     poststratified_estimates <- perform_poststratification({{ model }}, reduced_frame, {{ estimates_by }},
                                                            {{ lower_confidence }}, {{ upper_confidence }},
                                                            {{ draws }}, ...)
-  }
-  else {
+  } else {
     poststratified_estimates <- tibble()
     values <- reduced_frame |>
       distinct(across({{ estimates_by }}))
     for(i in 1:nrow(values)) {
-      if(progress) { message(paste0(round(100*i/nrow(values), 2), "%")) }
+      if(progress) { message(paste0(round(100 * (i - 1) / nrow(values), 2), "%")) }
       current_values <- values[i,]
       print(paste("Poststratifying for", paste(current_values, collapse = " and ")))
       current_frame <- current_values |>
         left_join(reduced_frame, by = join_by({{ estimates_by }}))
-      poststratified_estimates <- bind_rows(poststratified_estimates,
-                                            perform_poststratification({{ model }}, current_frame, {{ estimates_by }},
-                                                                       {{ lower_confidence }}, {{ upper_confidence }},
-                                                                       {{ draws }}, ...))
+      poststratified_estimates <- poststratified_estimates |>
+        bind_rows(perform_poststratification({{ model }}, current_frame, {{ estimates_by }},
+                                             {{ lower_confidence }}, {{ upper_confidence }},
+                                             {{ draws }}, ...))
     }
   }
 

@@ -19,7 +19,7 @@
 poststratify <- function(model, poststratification_frame, estimates_by,
                          metric = function(value) { value },
                          weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence,
-                         draws = "predicted", large_frame = FALSE, progress = FALSE, ...) {
+                         draws = "predicted", slice_size = NULL, progress = FALSE, ...) {
 
   # prepare
   model_independent_variables <- get_independent_variables({{ model }})
@@ -31,19 +31,27 @@ poststratify <- function(model, poststratification_frame, estimates_by,
                      .groups = "drop")
 
   # do poststratification
-  if (!large_frame) {
+  if (is.null(slice_size)) {
     poststratified_estimates <- perform_poststratification({{ model }}, reduced_frame, {{ estimates_by }},
                                                            {{ metric }},
                                                            {{ lower_confidence }}, {{ upper_confidence }},
                                                            {{ draws }}, ...)
   } else {
-    poststratified_estimates <- tibble()
+    poststratified_estimates <- tibble::tibble()
     values <- reduced_frame |>
       distinct(across({{ estimates_by }}))
+    num_rows <- nrow(values)
+
+    for (group_start in seq(1, num_rows, by = slice_size)) {
+      group_end <- min(group_start + slice_size - 1, num_rows)
+
+      message(glue::glue("{group_start} to {group_end}: {round(100 * (group_start - 1) / num_rows, 2)}%."))
+
     for(i in 1:nrow(values)) {
       if(progress) { message(paste0(round(100 * (i - 1) / nrow(values), 2), "%")) }
-      current_values <- values[i,]
-      print(paste("Poststratifying for", paste(current_values, collapse = " and ")))
+      current_values <- values |>
+        dplyr::slice(group_start:group_end)
+      # print(paste("Poststratifying for", paste(current_values, collapse = " and ")))
       current_frame <- current_values |>
         left_join(reduced_frame, by = join_by({{ estimates_by }}))
       poststratified_estimates <- poststratified_estimates |>
@@ -51,6 +59,7 @@ poststratify <- function(model, poststratification_frame, estimates_by,
                                              {{ metric }},
                                              {{ lower_confidence }}, {{ upper_confidence }},
                                              {{ draws }}, ...))
+    }
     }
   }
 
@@ -136,7 +145,7 @@ collect_draws_by_strata <- function(draws, individual_prediction, estimates_by,
   draws |>
     dplyr::mutate(metric_prediction = metric(individual_prediction)) |>
     dplyr::mutate(strata_prediction = metric_prediction * n) |>
-    dplyr::group_by(dplyr::across(estimates_by), .draw) |>
+    dplyr::group_by(dplyr::across({{ estimates_by }}), .draw) |>
     dplyr::summarise(division_prediction = sum(strata_prediction),
                      .groups = "drop")
 }

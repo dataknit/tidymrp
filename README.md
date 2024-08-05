@@ -15,7 +15,7 @@ You can install the development version of tidymrp from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("jokroese/tidymrp")
+devtools::install_github("dataknit/tidymrp")
 ```
 
 ## Example

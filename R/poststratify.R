@@ -9,14 +9,16 @@
 #' @param draws predicted (default) or fitted. Predicted incorporates all uncertainty.
 #' @param large_frame
 #' @param progress
-#' @param backend
 #' @param ... Extra arguments for adding draws from tidybayes. See tidybayes::add_predicted_draws() for details.
+#' @param metric
 #'
 #' @return
 #' @export
 #'
 #' @examples
-poststratify <- function(model, poststratification_frame, estimates_by, weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence,
+poststratify <- function(model, poststratification_frame, estimates_by,
+                         metric = function(value) { value },
+                         weight_column = n, lower_confidence = 0.025, upper_confidence = 1-lower_confidence,
                          draws = "predicted", slice_size = NULL, progress = FALSE, ...) {
 
   # prepare
@@ -31,6 +33,7 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
   # do poststratification
   if (is.null(slice_size)) {
     poststratified_estimates <- perform_poststratification({{ model }}, reduced_frame, {{ estimates_by }},
+                                                           {{ metric }},
                                                            {{ lower_confidence }}, {{ upper_confidence }},
                                                            {{ draws }}, ...)
   } else {
@@ -53,6 +56,7 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
         left_join(reduced_frame, by = join_by({{ estimates_by }}))
       poststratified_estimates <- poststratified_estimates |>
         bind_rows(perform_poststratification({{ model }}, current_frame, {{ estimates_by }},
+                                             {{ metric }},
                                              {{ lower_confidence }}, {{ upper_confidence }},
                                              {{ draws }}, ...))
     }
@@ -67,35 +71,43 @@ poststratify <- function(model, poststratification_frame, estimates_by, weight_c
 
 #' Perform poststratification
 #'
-#' @param estimate_value
+#' @param model
+#' @param reduced_frame
+#' @param estimates_by
+#' @param metric
+#' @param lower_confidence
+#' @param upper_confidence
+#' @param draws
+#' @param ...
 #'
 #' @return
 #' @export
 #'
 #' @examples
 perform_poststratification <- function(model, reduced_frame, estimates_by,
+                                       metric,
                                        lower_confidence, upper_confidence,
                                        draws, ...) {
   if(draws == "predicted") {
     draws <- tidybayes::add_predicted_draws(newdata = reduced_frame,
                                             object = model,
-                                            value = "strata_prediction",
+                                            value = "individual_prediction",
                                             ...)
   } else if(draws == "fitted") {
     draws <- tidybayes::add_epred_draws(newdata = reduced_frame,
                                         object = model,
-                                        value = "strata_prediction",
+                                        value = "individual_prediction",
                                         ...)
   } else {
     stop("'draws' parameter is invalid. It must be 'predicted' or 'fitted'.")
   }
 
-  if(any(is.na(draws$strata_prediction))) {
+  if(any(is.na(draws$individual_prediction))) {
     warning("Draws contain NA values.")
   }
 
   poststratified_estimates <- draws |>
-    collect_draws_by_strata(strata_prediction, {{ estimates_by }}) |>
+    collect_draws_by_strata(individual_prediction, {{ estimates_by }}, metric) |>
     dplyr::group_by(dplyr::across({{ estimates_by }})) |>
     dplyr::summarise(
       # x = quantile(pop_prediction, c(0.25, 0.5, 0.75)), q = c(0.25, 0.5, 0.75),
@@ -120,16 +132,19 @@ perform_poststratification <- function(model, reduced_frame, estimates_by,
 #' Usually used internally by poststratify. Provides draws, grouped by
 #'
 #' @param draws
-#' @param strata_prediction
 #' @param estimates_by
+#' @param individual_prediction
+#' @param metric
 #'
 #' @return
 #' @export
 #'
 #' @examples
-collect_draws_by_strata <- function(draws, strata_prediction, estimates_by) {
+collect_draws_by_strata <- function(draws, individual_prediction, estimates_by,
+                                    metric) {
   draws |>
-    dplyr::mutate(strata_prediction = strata_prediction * n) |>
+    dplyr::mutate(metric_prediction = metric(individual_prediction)) |>
+    dplyr::mutate(strata_prediction = metric_prediction * n) |>
     dplyr::group_by(dplyr::across({{ estimates_by }}), .draw) |>
     dplyr::summarise(division_prediction = sum(strata_prediction),
                      .groups = "drop")
